@@ -91,27 +91,7 @@ var colors = [
 	'purple',
 	'gray',
 	'orange'	
-]
-
-d3.csv("data.csv", function(error, data) {
-	if (error) throw error;
-	var point = new Object();
-	var times = data.map(function(d) { return d["Time"]; });
-	//console.log(data.map(function(d) { return d["Time"]; }));
-	
-	data.map(function(d) { return d["Time"]; }).forEach(function(time) {
-		console.log(time);
-		point.x = time;
-	});
-	
-	data.map(function(d) { return d[1]; }).forEach(function(time) {
-		console.log(time);
-		point.x = time;
-	});
-	
-	
-	});
- 
+]; 
  
 //************************************************************
 // Create Margins and Axis and hook our zoom function
@@ -270,10 +250,7 @@ points.selectAll('.dot')
 		return "translate(" + x(d.point.x) + "," + y(d.point.y) + ")"; }
 	);
 	
- 
-	
-	
-	
+
 	
 //************************************************************
 // Zoom specific updates
