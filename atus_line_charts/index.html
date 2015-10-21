@@ -1,0 +1,292 @@
+<html>
+<head>
+
+<title>ATUS Line Charts using D3 | NYU Stern CITL</title>
+<script src="http://d3js.org/d3.v3.min.js"></script>
+<style>
+
+
+body {
+  font: 10px sans-serif;
+  margin: 50px;
+}
+ 
+.grid .tick {
+	stroke: lightgrey;
+	opacity: 0.7;
+	shape-rendering: crispEdges;
+}
+ 
+.grid path {
+	stroke-width: 0;
+}
+ 
+.axis path {
+	fill: none;
+	stroke: #bbb;
+	shape-rendering: crispEdges;
+}
+ 
+.axis text {
+	fill: #555;
+}
+ 
+.axis line {	
+	stroke: #e7e7e7;
+	shape-rendering: crispEdges;
+}
+ 
+.axis .axis-label {
+	font-size: 14px;
+}
+ 
+.line {
+	fill: none;
+	stroke-width: 1.5px;
+}
+ 
+.dot {
+	/* consider the stroke-with the mouse detect radius? */
+	stroke: transparent;
+	stroke-width: 10px;  
+	cursor: pointer;
+}
+ 
+.dot:hover {
+	stroke: rgba(68, 127, 255, 0.3);
+}
+ 
+
+</style>
+
+
+</head>
+
+<body>
+<script>
+
+//************************************************************
+// Data notice the structure
+//************************************************************
+var data = 	[
+	[{'x':12,'y':55.8},{'x':13,'y':64.3},{'x':14,'y':73.5},{'x':15,'y':70.2},{'x':16,'y':60},{'x':17,'y':37.5},{'x':18,'y':18.6},{'x':19,'y':12.8},{'x':20,'y':11.2},{'x':21,'y':10},{'x':22,'y':7.9}],
+	[{'x':12,'y':56.6},{'x':13,'y':65},{'x':14,'y':74.9},{'x':15,'y':73},{'x':16,'y':67.1},{'x':17,'y':40.6},{'x':18,'y':21.3},{'x':19,'y':13.2},{'x':20,'y':11.3},{'x':21,'y':10.4},{'x':22,'y':7.5}],
+	[{'x':12,'y':58.3},{'x':13,'y':68.5},{'x':14,'y':79.6},{'x':15,'y':78.6},{'x':16,'y':73.3},{'x':17,'y':38.8},{'x':18,'y':18.9},{'x':19,'y':7.6},{'x':20,'y':6.6},{'x':21,'y':5.8},{'x':22,'y':4.5}],
+	[{'x':12,'y':55.1},{'x':13,'y':63.9},{'x':14,'y':72.4},{'x':15,'y':68.2},{'x':16,'y':54.9},{'x':17,'y':35.3},{'x':18,'y':16.7},{'x':19,'y':12.5},{'x':20,'y':11.1},{'x':21,'y':9.7},{'x':22,'y':8.2}],
+	[{'x':12,'y':49.8},{'x':13,'y':65.8},{'x':14,'y':80},{'x':15,'y':74.5},{'x':16,'y':66.8},{'x':17,'y':43.3},{'x':18,'y':14.3},{'x':19,'y':9.4},{'x':20,'y':5.5},{'x':21,'y':8},{'x':22,'y':6.4}],
+	[{'x':12,'y':51.4},{'x':13,'y':80.6},{'x':14,'y':79.9},{'x':15,'y':83.6},{'x':16,'y':61.4},{'x':17,'y':33.7},{'x':18,'y':11.3},{'x':19,'y':3.6},{'x':20,'y':5},{'x':21,'y':3.4},{'x':22,'y':2.6}]
+];
+
+var legends = ['Management, professional, and related occupations',
+				'Management, business, and financial operations occupations',
+				'Business and financial operations occupations',
+				'Professional and related occupations',
+				'Computer and mathematical occupations',
+				'Architecture and engineering occupations'];
+ 
+var colors = [
+	'steelblue',
+	'green',
+	'red',
+	'purple',
+	'gray',
+	'orange'	
+]
+
+d3.csv("data.csv", function(error, data) {
+	if (error) throw error;
+	var point = new Object();
+	var times = data.map(function(d) { return d["Time"]; });
+	//console.log(data.map(function(d) { return d["Time"]; }));
+	
+	data.map(function(d) { return d["Time"]; }).forEach(function(time) {
+		console.log(time);
+		point.x = time;
+	});
+	
+	data.map(function(d) { return d[1]; }).forEach(function(time) {
+		console.log(time);
+		point.x = time;
+	});
+	
+	
+	});
+ 
+ 
+//************************************************************
+// Create Margins and Axis and hook our zoom function
+//************************************************************
+var margin = {top: 20, right: 30, bottom: 30, left: 50},
+    width = 960 - margin.left - margin.right,
+    height = 500 - margin.top - margin.bottom;
+	
+var x = d3.scale.linear()
+    .domain([11, 23])
+    .range([0, width]);
+ 
+var y = d3.scale.linear()
+    .domain([-1, 90])
+    .range([height, 0]);
+	
+var xAxis = d3.svg.axis()
+    .scale(x)
+	.tickSize(-height)
+	.tickPadding(10)	
+	.tickSubdivide(true)	
+    .orient("bottom");	
+	
+var yAxis = d3.svg.axis()
+    .scale(y)
+	.tickPadding(10)
+	.tickSize(-width)
+	.tickSubdivide(true)	
+    .orient("left");
+	
+var zoom = d3.behavior.zoom()
+    .x(x)
+    .y(y)
+    .scaleExtent([1, 10])
+    .on("zoom", zoomed);	
+	
+	
+//************************************************************
+// Generate our SVG object
+//************************************************************	
+var svg = d3.select("body").append("svg")
+	.call(zoom)
+    .attr("width", width + margin.left + margin.right)
+    .attr("height", height + margin.top + margin.bottom)
+	.append("g")
+    .attr("transform", "translate(" + margin.left + "," + margin.top + ")");
+	
+	
+var legend = svg.selectAll('g')
+      .data(data)
+      .enter()
+    .append('g')
+      .attr('class', 'legend');
+    
+  legend.append('rect')
+      .attr('x', width - 295)
+      .attr('y', function(d, i){ return ((i + 1) *  20);})
+      .attr('width', 10)
+      .attr('height', 10)
+      .style('fill', function(d, i) { 
+        return colors[i];
+      });
+      
+  legend.append('text')
+      .attr('x', width - 275)
+      .attr('y', function(d, i){ return ((i +1) *  20) + 9;})
+      .text(function(d, i){
+				return legends[i]; 
+			});
+ 
+svg.append("g")
+    .attr("class", "x axis")
+    .attr("transform", "translate(0," + height + ")")
+    .call(xAxis);
+ 
+svg.append("g")
+    .attr("class", "y axis")
+    .call(yAxis);
+ 
+svg.append("g")
+	.attr("class", "y axis")
+	.append("text")
+	.attr("class", "axis-label")
+	.attr("transform", "rotate(-90)")
+	.attr("y", (-margin.left) + 10)
+	.attr("x", -height/2)
+	.text('Percentage Utilization');
+
+svg.append("g")
+	.attr("class", "y axis")
+	.append("text")
+	.attr("class", "axis-label")
+	.attr("y", height + 30)
+	.attr("x", width - 200)
+	.text('Time');	
+
+svg.append("clipPath")
+	.attr("id", "clip")
+	.append("rect")
+	.attr("width", width)
+	.attr("height", height);
+	
+	
+	
+	
+	
+//************************************************************
+// Create D3 line object and draw data on our SVG object
+//************************************************************
+var line = d3.svg.line()
+    .interpolate("linear")	
+    .x(function(d) { return x(d.x); })
+    .y(function(d) { return y(d.y); });		
+	
+svg.selectAll('.line')
+	.data(data)
+	.enter()
+	.append("path")
+    .attr("class", "line")
+	.attr("clip-path", "url(#clip)")
+	.attr('stroke', function(d,i){ 			
+		return colors[i%colors.length];
+	})
+    .attr("d", line);		
+	
+	
+	
+	
+//************************************************************
+// Draw points on SVG object based on the data given
+//************************************************************
+var points = svg.selectAll('.dots')
+	.data(data)
+	.enter()
+	.append("g")
+    .attr("class", "dots")
+	.attr("clip-path", "url(#clip)");	
+ 
+points.selectAll('.dot')
+	.data(function(d, index){ 		
+		var a = [];
+		d.forEach(function(point,i){
+			a.push({'index': index, 'point': point});
+		});		
+		
+		return a;
+	})
+	.enter()
+	.append('circle')
+	.attr('class','dot')
+	.attr("r", 2.5)
+	.attr('fill', function(d,i){ 	
+		return colors[d.index%colors.length];
+	})	
+	.attr("transform", function(d) { 
+		return "translate(" + x(d.point.x) + "," + y(d.point.y) + ")"; }
+	);
+	
+ 
+	
+	
+	
+	
+//************************************************************
+// Zoom specific updates
+//************************************************************
+function zoomed() {
+	svg.select(".x.axis").call(xAxis);
+	svg.select(".y.axis").call(yAxis);   
+	svg.selectAll('path.line').attr('d', line);  
+ 
+	points.selectAll('circle').attr("transform", function(d) { 
+		return "translate(" + x(d.point.x) + "," + y(d.point.y) + ")"; }
+	);  
+}
+</script>
+</body>
+</html>
